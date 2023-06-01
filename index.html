@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Termostato</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+    h1 { text-align: center; }
+    .data-container { width: 300px; border: 1px solid #ccc; border-radius: 4px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
+    .data-container p { margin: 0; }
+    .form-container { width: 300px; border: 1px solid #ccc; border-radius: 4px; padding: 20px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
+    .form-container label { display: block; margin-bottom: 10px; }
+    .form-container input[type='number'] { width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+    .form-container input[type='submit'] { width: 100%; padding: 10px; background-color: #4CAF50; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Termostato</h1>
+  <div class="data-container">
+    <p>Temperatura: <span id="temperature">-</span> °C</p>
+    <p>Humedad: <span id="humidity">-</span> %</p>
+    <p>Tmin: <span id="tmin">-</span> °C</p>
+    <p>Tmax: <span id="tmax">-</span> °C</p>
+    <p>Estado de D5: <span id="d5-status">-</span></p>
+  </div>
+  <div class="form-container">
+    <form id="settings-form">
+      <label for="tmin">Tmin:</label>
+      <input type="number" name="tmin" id="tmin-input" step="0.1" required>
+      <label for="tmax">Tmax:</label>
+      <input type="number" name="tmax" id="tmax-input" step="0.1" required>
+      <input type="submit" value="Guardar">
+    </form>
+  </div>
+
+  <script>
+    const wemosIP = '192.168.0.132'; // Reemplaza con la dirección IP del Wemos
+
+    setInterval(getData, 2000); // Obtener los datos cada 2 segundos
+
+    document.getElementById('settings-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const tmin = document.getElementById('tmin-input').value;
+      const tmax = document.getElementById('tmax-input').value;
+
+      fetch(`http://${wemosIP}/settings?tmin=${tmin}&tmax=${tmax}`)
+        .then(response => {
+          if (response.ok) {
+            console.log('Configuración guardada');
+          } else {
+            console.error('Error en la solicitud:', response.status);
+          }
+        })
+        .catch(error => {
+          console.error('Error en la solicitud:', error);
+        });
+    });
+
+    function getData() {
+      fetch(`http://${wemosIP}/data`)
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('temperature').textContent = data.temperature;
+          document.getElementById('humidity').textContent = data.humidity;
+          document.getElementById('tmin').textContent = data.tmin;
+          document.getElementById('tmax').textContent = data.tmax;
+          document.getElementById('d5-status').textContent = data.d5Status ? 'Encendido' : 'Apagado';
+        })
+        .catch(error => {
+          console.error('Error al obtener los datos:', error);
+        });
+    }
+  </script>
+</body>
+</html>
